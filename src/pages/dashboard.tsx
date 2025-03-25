@@ -1,7 +1,10 @@
+// pages/dashboard.tsx
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/router';  // Add this import
+
 import { Badge } from '@/components/ui/badge';
 import { 
   BarChart,
@@ -29,56 +32,215 @@ import {
   UserCircle,
   LayoutDashboard,
   FileText,
+
   Menu,
   X,
   LogOut
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
-// Define mock data for complaintsByStatus
-const complaintsByStatus = [
-  { name: 'Pending', value: 10 },
-  { name: 'Completed', value: 20 },
-  { name: 'Not Completed', value: 5 },
-];
-
-// Define COLORS array for the PieChart
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-// Define mock data for complaintsByDepartment
-const complaintsByDepartment = [
-  { name: 'HR', open: 5, closed: 10 },
-  { name: 'IT', open: 8, closed: 12 },
-  { name: 'Finance', open: 3, closed: 7 },
-];
-
-// Define mock data for monthlyStats
-const monthlyStats = [
-  { month: 'January', open: 10, closed: 5 },
-  { month: 'February', open: 15, closed: 10 },
-  { month: 'March', open: 20, closed: 15 },
-];
-
-// Define mock data for staffPerformance
-const staffPerformance = [
-  { name: 'John Doe', resolved: 15, averageResolutionTime: 24 },
-  { name: 'Jane Smith', resolved: 20, averageResolutionTime: 18 },
-  { name: 'Alice Johnson', resolved: 10, averageResolutionTime: 30 },
-];
-
-// Utility function to format dates
-function formatDate(date: string | Date): string {
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long', day: 'numeric' };
-  return new Date(date).toLocaleDateString(undefined, options);
+// Types
+interface Complaint {
+  id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'completed' | 'not_completed';
+  priority: 'low' | 'medium' | 'high';
+  createdAt: string;
+  completedAt?: string;
+  department: string;
+  phoneNumber: string;
+  category: string;
+  deadline: string;
+  assignedTo: {
+    id: string;
+    name: string;
+  };
 }
 
+interface MonthlyStat {
+  month: string;
+  open: number;
+  closed: number;
+}
+
+interface StaffPerformance {
+  name: string;
+  resolved: number;
+  averageResolutionTime: number; // in hours
+}
+
+interface DepartmentStat {
+  name: string;
+  open: number;
+  closed: number;
+}
+
+// Mock data
+const complaintsByStatus = [
+  { name: 'Open', value: 34 },
+  { name: 'Closed', value: 78 },
+];
+
+const complaintsByDepartment: DepartmentStat[] = [
+  { name: 'Electricity Problem', open: 12, closed: 25 },
+  { name: 'Water logging', open: 9, closed: 31 },
+  { name: 'Road Problem', open: 8, closed: 14 },
+  { name: 'Drainage Problem', open: 5, closed: 8 },
+];
+
+const monthlyStats: MonthlyStat[] = [
+  { month: 'Jan', open: 24, closed: 35 },
+  { month: 'Feb', open: 28, closed: 42 },
+  { month: 'Mar', open: 30, closed: 48 },
+  { month: 'Apr', open: 34, closed: 52 },
+  { month: 'May', open: 32, closed: 58 },
+  { month: 'Jun', open: 30, closed: 62 },
+];
+
+const staffPerformance: StaffPerformance[] = [
+  { name: 'Rajesh bhai', resolved: 28, averageResolutionTime: 12.5 },
+  { name: 'Amit bhai', resolved: 32, averageResolutionTime: 10.2 },
+  { name: 'Mahesh', resolved: 18, averageResolutionTime: 15.8 },
+  { name: 'Varun Dae', resolved: 24, averageResolutionTime: 11.3 },
+  { name: 'Arjun', resolved: 26, averageResolutionTime: 13.7 },
+];
+
+const complaintsData: Complaint[] = [
+  {
+    id: '1',
+    title: 'Network Issues',
+    description: 'Frequent network disconnections in Block A',
+    status: 'pending',
+    priority: 'high',
+    createdAt: '2024-02-15',
+    department: 'IT',
+    phoneNumber: '+1234567890',
+    category: 'Technical',
+    deadline: '2024-02-20',
+    assignedTo: {
+      id: '1',
+      name: 'John Doe'
+    }
+  },
+  {
+    id: '2',
+    title: 'AC Maintenance',
+    description: 'AC not cooling properly in meeting room 2',
+    status: 'completed',
+    priority: 'medium',
+    createdAt: '2024-02-10',
+    completedAt: '2024-02-12',
+    department: 'Maintenance',
+    phoneNumber: '+1234567891',
+    category: 'Maintenance',
+    deadline: '2024-02-15',
+    assignedTo: {
+      id: '2',
+      name: 'Jane Smith'
+    }
+  },
+  {
+    id: '3',
+    title: 'Software License Issue',
+    description: 'Unable to activate design software',
+    status: 'not_completed',
+    priority: 'low',
+    createdAt: '2024-02-14',
+    department: 'IT',
+    phoneNumber: '+1234567892',
+    category: 'Software',
+    deadline: '2024-02-25',
+    assignedTo: {
+      id: '3',
+      name: 'Mike Johnson'
+    }
+  },
+  {
+    id: '4',
+    title: 'Parking Area Lighting',
+    description: 'Several lights in parking area B are not working',
+    status: 'completed',
+    priority: 'medium',
+    createdAt: '2024-02-05',
+    completedAt: '2024-02-08',
+    department: 'Facilities',
+    phoneNumber: '+1234567893',
+    category: 'Electrical',
+    deadline: '2024-02-10',
+    assignedTo: {
+      id: '4',
+      name: 'Sarah Williams'
+    }
+  },
+  {
+    id: '5',
+    title: 'Water Leakage',
+    description: 'Water leaking from ceiling in corridor near office 302',
+    status: 'pending',
+    priority: 'high',
+    createdAt: '2024-02-17',
+    department: 'Maintenance',
+    phoneNumber: '+1234567894',
+    category: 'Plumbing',
+    deadline: '2024-02-19',
+    assignedTo: {
+      id: '5',
+      name: 'Alex Brown'
+    }
+  },
+  {
+    id: '6',
+    title: 'Printer Malfunction',
+    description: 'Main printer in design department showing error code E502',
+    status: 'not_completed',
+    priority: 'medium',
+    createdAt: '2024-02-18',
+    department: 'IT',
+    phoneNumber: '+1234567895',
+    category: 'Hardware',
+    deadline: '2024-02-22',
+    assignedTo: {
+      id: '1',
+      name: 'John Doe'
+    }
+  }
+];
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+
+// Sidebar navigation items
+const sidebarNavItems = [
+  {
+    title: "Dashboard",
+    icon: <LayoutDashboard className="h-5 w-5" />,
+    href: "/dashboard",
+  },
+  {
+    title: "Complaints",
+    icon: <FileText className="h-5 w-5" />,
+    href: "/complaints",
+  },
+ 
+  {
+    title: "Field Workers",
+    icon: <Users className="h-5 w-5" />,
+    href: "/field-workers",
+  },
+];
+
 export default function Dashboard() {
-  const router = useRouter();
   const [viewComplaints, setViewComplaints] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const router = useRouter();  // Add this line
+ // Add this function
+ const navigateToComplaints = (status?: string) => {
+  router.push({
+    pathname: '/complaints',
+    query: status ? { status } : {}
+  });
+};
   // Function to get badge color based on status
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -104,71 +266,116 @@ export default function Dashboard() {
     }
   };
 
-  function filteredComplaints() {
-    const allComplaints: Complaint[] = [
-      {
-        id: 1,
-        title: 'System Issue',
-        description: 'The system is not responding.',
-        phoneNumber: '123-456-7890',
-        category: 'Technical',
-        department: 'IT',
-        createdAt: '2023-01-01',
-        deadline: '2023-01-10',
-        status: 'pending',
-        assignedTo: { name: 'John Doe' },
-      },
-      {
-        id: 2,
-        title: 'Payroll Error',
-        description: 'Incorrect salary credited.',
-        phoneNumber: '987-654-3210',
-        category: 'Finance',
-        department: 'HR',
-        createdAt: '2023-01-05',
-        deadline: '2023-01-15',
-        status: 'completed',
-        assignedTo: { name: 'Jane Smith' },
-      },
-      {
-        id: 3,
-        title: 'Network Downtime',
-        description: 'Internet is down in the office.',
-        phoneNumber: '555-555-5555',
-        category: 'Technical',
-        department: 'IT',
-        createdAt: '2023-01-03',
-        deadline: '2023-01-12',
-        status: 'not_completed',
-        assignedTo: { name: 'Alice Johnson' },
-      },
-    ];
-
-    if (activeTab === 'all') {
-      return allComplaints;
-    }
-
-    return allComplaints.filter((complaint) => complaint.status === activeTab);
-  }
-
-  function getCardBorderClass(status: string) {
+  // Function to get card border color based on status
+  const getCardBorderClass = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'border-green-500';
+        return 'border-l-4 border-l-green-400';
       case 'not_completed':
-        return 'border-red-500';
+        return 'border-l-4 border-l-red-400';
       case 'pending':
-        return 'border-yellow-500';
       default:
-        return 'border-gray-300';
+        return 'border-l-4 border-l-gray-400';
     }
-  }
+  };
 
-  // Other existing functions remain the same...
+  // Format date to be more readable
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
+
+  // Filter complaints based on active tab
+  const filteredComplaints = () => {
+    if (activeTab === 'all') {
+      return complaintsData;
+    }
+    return complaintsData.filter(complaint => complaint.status === activeTab);
+  };
+
+  // Set the active tab and view complaints when clicking on a card
+ 
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar section remains the same */}
+      {/* Sidebar - desktop */}
+      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-200">
+        <div className="p-4 border-b">
+          <h2 className="text-xl font-bold">Complaint System</h2>
+        </div>
+        <nav className="flex-1 pt-4">
+          <ul>
+            {sidebarNavItems.map((item, index) => (
+              <li key={index}>
+                <Link 
+                  href={item.href}
+                  className={`flex items-center gap-3 px-4 py-3 text-sm ${
+                    item.title === "Dashboard" 
+                      ? "bg-blue-50 text-blue-600 border-r-2 border-blue-600" 
+                      : "text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {item.icon}
+                  {item.title}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="p-4 border-t mt-auto">
+          <button className="flex items-center gap-2 text-sm text-gray-700 hover:text-red-600">
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
+        </div>
+      </aside>
+
+      {/* Sidebar - mobile */}
+      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? "block" : "hidden"}`}>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 transition-opacity" 
+             onClick={() => setSidebarOpen(false)}></div>
+        
+        <div className="fixed inset-y-0 left-0 flex flex-col w-64 bg-white">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="text-xl font-bold">Complaint System</h2>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1 rounded-md hover:bg-gray-100"
+            >
+              <X className="h-6 w-6" />
+            </button>
+          </div>
+          <nav className="flex-1 pt-4">
+            <ul>
+              {sidebarNavItems.map((item, index) => (
+                <li key={index}>
+                  <Link 
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 text-sm ${
+                      item.title === "Dashboard" 
+                        ? "bg-blue-50 text-blue-600 border-r-2 border-blue-600" 
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {item.icon}
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="p-4 border-t mt-auto">
+            <button className="flex items-center gap-2 text-sm text-gray-700 hover:text-red-600">
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
       
       <div className="flex flex-col flex-1">
         <header className="sticky top-0 z-10 bg-white border-b">
@@ -193,7 +400,7 @@ export default function Dashboard() {
             {!viewComplaints && (
               <>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 justify-items-center">
-                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => router.push('/complaints')}>
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
@@ -206,14 +413,11 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
-                    router.push('/complaints');
-                    localStorage.setItem('activeComplaintTab', 'pending');
-                  }}>
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
-                          <span className="text-sm font-medium text-gray-500">Not Assigned</span>
+                          <span className="text-sm font-medium text-gray-500">Open Complaints</span>
                           <span className="text-3xl font-bold">{complaintsByStatus[0].value}</span>
                         </div>
                         <div className="p-2 bg-yellow-100 rounded-full">
@@ -222,30 +426,11 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
-                    router.push('/complaints');
-                    localStorage.setItem('activeComplaintTab', 'in_progress');
-                  }}>
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
-                          <span className="text-sm font-medium text-gray-500">In Process</span>
-                          <span className="text-3xl font-bold">{complaintsByStatus[0].value}</span>
-                        </div>
-                        <div className="p-2 bg-orange-100 rounded-full">
-                          <Phone className="h-8 w-8 text-orange-600" />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => {
-                    router.push('/complaints');
-                    localStorage.setItem('activeComplaintTab', 'completed');
-                  }}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between space-x-4">
-                        <div className="flex flex-col space-y-1">
-                          <span className="text-sm font-medium text-gray-500">Completed</span>
+                          <span className="text-sm font-medium text-gray-500">Closed Complaints</span>
                           <span className="text-3xl font-bold">{complaintsByStatus[1].value}</span>
                         </div>
                         <div className="p-2 bg-green-100 rounded-full">
@@ -254,11 +439,21 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between space-x-4">
+                        <div className="flex flex-col space-y-1">
+                          <span className="text-sm font-medium text-gray-500">Not Assigned</span>
+                          <span className="text-3xl font-bold">{staffPerformance.length}</span>
+                        </div>
+                        <div className="p-2 bg-red-100 rounded-full">
+                          <Users className="h-8 w-8 text-red-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* Rest of the existing dashboard code remains the same */}
-                {/* ... */}
-                
                 <Tabs defaultValue="overview" className="w-full">
                   <div className="flex justify-center mb-6">
                     <TabsList className="grid w-full max-w-md grid-cols-3 h-auto">
@@ -389,9 +584,6 @@ export default function Dashboard() {
               </>
             )}
             
-            {/* Rest of the existing code remains the same */}
-            {/* ... */}
-                        
             {viewComplaints && (
               <>
                 <div className="flex items-center justify-between mb-6">
@@ -427,53 +619,53 @@ export default function Dashboard() {
 
                   <TabsContent value={activeTab} className="mt-6">
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredComplaints().map((complaint: Complaint) => (
+                      {filteredComplaints().map((complaint) => (
                         <Card key={complaint.id} className={`w-full ${getCardBorderClass(complaint.status)}`}>
                           <CardHeader className="pb-2">
-                          <div className="flex justify-between items-start">
-                            <CardTitle className="text-lg">{complaint.title}</CardTitle>
-                            {getStatusBadge(complaint.status)}
-                          </div>
+                            <div className="flex justify-between items-start">
+                              <CardTitle className="text-lg">{complaint.title}</CardTitle>
+                              {getStatusBadge(complaint.status)}
+                            </div>
                           </CardHeader>
                           <CardContent className="pb-2">
-                          <p className="text-sm text-gray-600 mb-4">{complaint.description}</p>
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                            <Phone className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">{complaint.phoneNumber}</span>
+                            <p className="text-sm text-gray-600 mb-4">{complaint.description}</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-gray-500" />
+                                <span className="text-sm">{complaint.phoneNumber}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">{complaint.category}</Badge>
+                                <Badge variant="outline">{complaint.department}</Badge>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <span className="text-sm">Assigned: {formatDate(complaint.createdAt)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-gray-500" />
+                                <span className="text-sm">Deadline: {formatDate(complaint.deadline)}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <UserCircle className="h-4 w-4 text-gray-500" />
+                                <span className="text-sm">Assigned to: {complaint.assignedTo.name}</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                            <Badge variant="outline">{complaint.category}</Badge>
-                            <Badge variant="outline">{complaint.department}</Badge>
-                            </div>
-                            <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">Assigned: {formatDate(complaint.createdAt)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">Deadline: {formatDate(complaint.deadline)}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                            <UserCircle className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm">Assigned to: {complaint.assignedTo.name}</span>
-                            </div>
-                          </div>
                           </CardContent>
                           <div className="p-6 pt-0">
-                          <div className="flex gap-2 w-full">
-                            <Button variant="outline" size="sm" className="flex-1">
-                            View Details
-                            </Button>
-                            {complaint.status === 'pending' && (
-                            <Button variant="outline" size="sm" className="flex-1">
-                              Update Status
-                            </Button>
-                            )}
-                          </div>
+                            <div className="flex gap-2 w-full">
+                              <Button variant="outline" size="sm" className="flex-1">
+                                View Details
+                              </Button>
+                              {complaint.status === 'pending' && (
+                                <Button variant="outline" size="sm" className="flex-1">
+                                  Update Status
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </Card>
-                        ))}
+                      ))}
                     </div>
                   </TabsContent>
                 </Tabs>
