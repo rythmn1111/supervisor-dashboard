@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '../../utils/supabase';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent,} from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Phone, Calendar } from 'lucide-react';
-// import Link from 'next/link';
+import { Phone, Calendar, ArrowLeft } from 'lucide-react';
 
 // Supabase client initialization
 const supabase = createClient(
@@ -29,6 +29,7 @@ interface Complaint {
 }
 
 export default function ComplaintsPage() {
+  const router = useRouter();
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -121,6 +122,17 @@ export default function ComplaintsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <main className="container mx-auto py-6 px-4">
+        <div className="flex items-center gap-4 mb-6">
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={() => router.push('/dashboard')}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold">Complaints</h1>
+        </div>
+
         <div className="max-w-7xl mx-auto space-y-6">
           <Tabs defaultValue="all" className="w-full">
             <TabsContent value="all" className="mt-6">

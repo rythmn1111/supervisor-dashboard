@@ -81,10 +81,10 @@ const complaintsByStatus = [
 ];
 
 const complaintsByDepartment: DepartmentStat[] = [
-  { name: 'Sales', open: 12, closed: 25 },
-  { name: 'Support', open: 9, closed: 31 },
-  { name: 'Product', open: 8, closed: 14 },
-  { name: 'Finance', open: 5, closed: 8 },
+  { name: 'Electricity Problem', open: 12, closed: 25 },
+  { name: 'Water logging', open: 9, closed: 31 },
+  { name: 'Road Problem', open: 8, closed: 14 },
+  { name: 'Drainage Problem', open: 5, closed: 8 },
 ];
 
 const monthlyStats: MonthlyStat[] = [
@@ -97,11 +97,11 @@ const monthlyStats: MonthlyStat[] = [
 ];
 
 const staffPerformance: StaffPerformance[] = [
-  { name: 'John Doe', resolved: 28, averageResolutionTime: 12.5 },
-  { name: 'Jane Smith', resolved: 32, averageResolutionTime: 10.2 },
-  { name: 'Mike Johnson', resolved: 18, averageResolutionTime: 15.8 },
-  { name: 'Sarah Williams', resolved: 24, averageResolutionTime: 11.3 },
-  { name: 'Alex Brown', resolved: 26, averageResolutionTime: 13.7 },
+  { name: 'Rajesh bhai', resolved: 28, averageResolutionTime: 12.5 },
+  { name: 'Amit bhai', resolved: 32, averageResolutionTime: 10.2 },
+  { name: 'Mahesh', resolved: 18, averageResolutionTime: 15.8 },
+  { name: 'Varun Dae', resolved: 24, averageResolutionTime: 11.3 },
+  { name: 'Arjun', resolved: 26, averageResolutionTime: 13.7 },
 ];
 
 const complaintsData: Complaint[] = [
