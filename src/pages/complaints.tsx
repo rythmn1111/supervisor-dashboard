@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../utils/supabase';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Phone, Calendar, ArrowLeft, MapPin, Clock, User } from 'lucide-react';
@@ -64,6 +64,7 @@ export default function ComplaintsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
+  const [activeTab, setActiveTab] = useState('not_assigned');
 
   // Fetch available field workers based on complaint category
   const fetchAvailableFieldWorkers = async (category: string) => {
@@ -249,6 +250,169 @@ export default function ComplaintsPage() {
     return phone.replace('@c.us', '');
   };
 
+  // Render complaint cards based on status
+  const renderComplaintCards = (status: string) => {
+    const filteredComplaints = complaints.filter(complaint => 
+      complaint.status.toLowerCase() === status.toLowerCase()
+    );
+
+    return filteredComplaints.length > 0 ? (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filteredComplaints.map((complaint) => (
+          <Card 
+            key={complaint.id} 
+            className={`w-full ${getCardBorderColor(complaint.status)}`}
+          >
+            <CardHeader className="pb-2">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-lg">
+                  {complaint.category} / <br /> <br /> {complaint.subcategory}
+                </CardTitle>
+                {getStatusBadge(complaint.status)}
+              </div>
+            </CardHeader>
+            <CardContent className="pb-2">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Phone Number: {formatPhoneNumber(complaint.user_phone)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Address: {complaint.address}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Complaint Date: {formatDate(complaint.created_at)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Field Worker: {complaint.status === 'pending' || !complaint.field_worker_assigned 
+                      ? 'Not Assigned' 
+                      : complaint.field_worker_assigned}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Deadline: {complaint.status === 'pending' || !complaint.deadline_date 
+                      ? 'Not Assigned' 
+                      : formatDate(complaint.deadline_date)}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter>
+              {complaint.status.toLowerCase() === 'pending' ? (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => {
+                        setSelectedComplaint(complaint);
+                        fetchAvailableFieldWorkers(complaint.category);
+                      }}
+                    >
+                      Assign Complaint
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Assign Complaint</DialogTitle>
+                      <DialogDescription>
+                        Assign this complaint to an available field worker
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="grid gap-4 py-4">
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="fieldWorker" className="text-right">
+                          Field Worker
+                        </Label>
+                        <Select 
+                          onValueChange={setSelectedFieldWorker}
+                          value={selectedFieldWorker || undefined}
+                        >
+                          <SelectTrigger className="col-span-3">
+                            <SelectValue placeholder="Select field worker" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableFieldWorkers.length > 0 ? (
+                              availableFieldWorkers.map((worker) => (
+                                <SelectItem 
+                                  key={worker.id} 
+                                  value={worker.name}
+                                >
+                                  {worker.name} - {worker.master_category}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <div className="p-2 text-center text-gray-500">
+                                No available field workers
+                              </div>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="deadline" className="text-right">
+                          Deadline
+                        </Label>
+                        <Input 
+                          id="deadline" 
+                          type="date" 
+                          className="col-span-3"
+                          value={selectedDeadline}
+                          onChange={(e) => setSelectedDeadline(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    
+                    <DialogFooter>
+                      <Button 
+                        type="submit" 
+                        onClick={handleAssignComplaint}
+                        disabled={!selectedFieldWorker}
+                      >
+                        Assign
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              ) : complaint.status.toLowerCase() === 'in_progress' ? (
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="w-full"
+                  onClick={() => handleMarkAsComplete(complaint)}
+                >
+                  Mark as Complete
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="w-full">
+                  View Details
+                </Button>
+              )}
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    ) : (
+      <div className="text-center text-gray-500 py-10">
+        No complaints in this category
+      </div>
+    );
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -282,157 +446,28 @@ export default function ComplaintsPage() {
         </div>
 
         <div className="max-w-7xl mx-auto space-y-6">
-          <Tabs defaultValue="all" className="w-full">
-            <TabsContent value="all" className="mt-6">
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {complaints.map((complaint) => (
-                  <Card 
-                    key={complaint.id} 
-                    className={`w-full ${getCardBorderColor(complaint.status)}`}
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start">
-                        <CardTitle className="text-lg">
-                          {complaint.category} / <br /> <br /> {complaint.subcategory}
-                        </CardTitle>
-                        {getStatusBadge(complaint.status)}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm">
-                            Phone Number: {formatPhoneNumber(complaint.user_phone)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm">
-                            Address: {complaint.address}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm">
-                            Complaint Date: {formatDate(complaint.created_at)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm">
-                            Field Worker: {complaint.status === 'pending' || !complaint.field_worker_assigned 
-                              ? 'Not Assigned' 
-                              : complaint.field_worker_assigned}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm">
-                            Deadline: {complaint.status === 'pending' || !complaint.deadline_date 
-                              ? 'Not Assigned' 
-                              : formatDate(complaint.deadline_date)}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                    <CardFooter>
-                      {complaint.status.toLowerCase() === 'pending' ? (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button 
-                              variant="default" 
-                              size="sm" 
-                              className="w-full"
-                              onClick={() => {
-                                setSelectedComplaint(complaint);
-                                fetchAvailableFieldWorkers(complaint.category);
-                              }}
-                            >
-                              Assign Complaint
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Assign Complaint</DialogTitle>
-                              <DialogDescription>
-                                Assign this complaint to an available field worker
-                              </DialogDescription>
-                            </DialogHeader>
-                            
-                            <div className="grid gap-4 py-4">
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="fieldWorker" className="text-right">
-                                  Field Worker
-                                </Label>
-                                <Select 
-                                  onValueChange={setSelectedFieldWorker}
-                                  value={selectedFieldWorker || undefined}
-                                >
-                                  <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Select field worker" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {availableFieldWorkers.length > 0 ? (
-                                      availableFieldWorkers.map((worker) => (
-                                        <SelectItem 
-                                          key={worker.id} 
-                                          value={worker.name}
-                                        >
-                                          {worker.name} - {worker.master_category}
-                                        </SelectItem>
-                                      ))
-                                    ) : (
-                                      <div className="p-2 text-center text-gray-500">
-                                        No available field workers
-                                      </div>
-                                    )}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="deadline" className="text-right">
-                                  Deadline
-                                </Label>
-                                <Input 
-                                  id="deadline" 
-                                  type="date" 
-                                  className="col-span-3"
-                                  value={selectedDeadline}
-                                  onChange={(e) => setSelectedDeadline(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            
-                            <DialogFooter>
-                              <Button 
-                                type="submit" 
-                                onClick={handleAssignComplaint}
-                                disabled={!selectedFieldWorker}
-                              >
-                                Assign
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      ) : complaint.status.toLowerCase() === 'in_progress' ? (
-                        <Button 
-                          variant="default" 
-                          size="sm" 
-                          className="w-full"
-                          onClick={() => handleMarkAsComplete(complaint)}
-                        >
-                          Mark as Complete
-                        </Button>
-                      ) : (
-                        <Button variant="outline" size="sm" className="w-full">
-                          View Details
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
+          <Tabs 
+            defaultValue="not_assigned" 
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="not_assigned">Not Assigned</TabsTrigger>
+              <TabsTrigger value="in_progress">In Process</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="not_assigned" className="mt-6">
+              {renderComplaintCards('pending')}
+            </TabsContent>
+            
+            <TabsContent value="in_progress" className="mt-6">
+              {renderComplaintCards('in_progress')}
+            </TabsContent>
+            
+            <TabsContent value="completed" className="mt-6">
+              {renderComplaintCards('completed')}
             </TabsContent>
           </Tabs>
         </div>
