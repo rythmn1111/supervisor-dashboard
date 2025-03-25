@@ -29,10 +29,6 @@ interface FieldWorker {
   master_category: string;
 }
 
-interface Category {
-  name: string;
-}
-
 export default function FieldWorkersPage() {
   const router = useRouter();
   const [fieldWorkers, setFieldWorkers] = useState<FieldWorker[]>([]);

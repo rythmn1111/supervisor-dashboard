@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '../../utils/supabase';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent,} from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Phone, Calendar } from 'lucide-react';
-import Link from 'next/link';
+// import Link from 'next/link';
 
 // Supabase client initialization
 const supabase = createClient(
@@ -46,8 +46,12 @@ export default function ComplaintsPage() {
 
         setComplaints(data || []);
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('An unknown error occurred');
+        }
         setLoading(false);
       }
     };

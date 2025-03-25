@@ -30,10 +30,7 @@ import {
   UserCircle,
   LayoutDashboard,
   FileText,
-  UserCog,
-  Settings,
-  Bell,
-  BarChart2,
+
   Menu,
   X,
   LogOut
