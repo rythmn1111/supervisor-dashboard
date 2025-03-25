@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/router';  // Add this import
+
 import { Badge } from '@/components/ui/badge';
 import { 
   BarChart,
@@ -231,7 +233,14 @@ export default function Dashboard() {
   const [viewComplaints, setViewComplaints] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const router = useRouter();  // Add this line
+ // Add this function
+ const navigateToComplaints = (status?: string) => {
+  router.push({
+    pathname: '/complaints',
+    query: status ? { status } : {}
+  });
+};
   // Function to get badge color based on status
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -289,10 +298,7 @@ export default function Dashboard() {
   };
 
   // Set the active tab and view complaints when clicking on a card
-  const handleShowComplaints = (status: string = 'all') => {
-    setActiveTab(status);
-    setViewComplaints(true);
-  };
+ 
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -394,7 +400,7 @@ export default function Dashboard() {
             {!viewComplaints && (
               <>
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 justify-items-center">
-                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleShowComplaints('all')}>
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
@@ -407,7 +413,7 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleShowComplaints('pending')}>
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
@@ -420,7 +426,7 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleShowComplaints('completed')}>
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
@@ -433,15 +439,15 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="w-full">
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigateToComplaints('Completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
-                          <span className="text-sm font-medium text-gray-500">Staff Members</span>
+                          <span className="text-sm font-medium text-gray-500">Not Assigned</span>
                           <span className="text-3xl font-bold">{staffPerformance.length}</span>
                         </div>
-                        <div className="p-2 bg-purple-100 rounded-full">
-                          <Users className="h-8 w-8 text-purple-600" />
+                        <div className="p-2 bg-red-100 rounded-full">
+                          <Users className="h-8 w-8 text-red-600" />
                         </div>
                       </div>
                     </CardContent>
