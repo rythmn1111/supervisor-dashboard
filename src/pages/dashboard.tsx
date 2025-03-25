@@ -222,35 +222,11 @@ const sidebarNavItems = [
     icon: <FileText className="h-5 w-5" />,
     href: "/complaints",
   },
-  {
-    title: "Staff Management",
-    icon: <UserCog className="h-5 w-5" />,
-    href: "/staff",
-  },
+ 
   {
     title: "Field Workers",
     icon: <Users className="h-5 w-5" />,
     href: "/field-workers",
-  },
-  {
-    title: "Departments",
-    icon: <Users className="h-5 w-5" />,
-    href: "/departments",
-  },
-  {
-    title: "Reports",
-    icon: <BarChart2 className="h-5 w-5" />,
-    href: "/reports",
-  },
-  {
-    title: "Notifications",
-    icon: <Bell className="h-5 w-5" />,
-    href: "/notifications",
-  },
-  {
-    title: "Settings",
-    icon: <Settings className="h-5 w-5" />,
-    href: "/settings",
   },
 ];
 
