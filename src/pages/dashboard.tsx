@@ -228,6 +228,11 @@ const sidebarNavItems = [
     href: "/staff",
   },
   {
+    title: "Field Workers",
+    icon: <Users className="h-5 w-5" />,
+    href: "/field-workers",
+  },
+  {
     title: "Departments",
     icon: <Users className="h-5 w-5" />,
     href: "/departments",
@@ -308,6 +313,12 @@ export default function Dashboard() {
       return complaintsData;
     }
     return complaintsData.filter(complaint => complaint.status === activeTab);
+  };
+
+  // Set the active tab and view complaints when clicking on a card
+  const handleShowComplaints = (status: string = 'all') => {
+    setActiveTab(status);
+    setViewComplaints(true);
   };
 
   return (
@@ -409,25 +420,8 @@ export default function Dashboard() {
           <div className="max-w-7xl mx-auto space-y-6">
             {!viewComplaints && (
               <>
-                <div className="flex flex-wrap justify-center gap-4">
-                  <Button 
-                    size="lg" 
-                    variant="default" 
-                    className="min-w-[200px]"
-                    onClick={() => setViewComplaints(true)}
-                  >
-                    View all complaints
-                  </Button>
-                  <Button size="lg" variant="default" className="min-w-[200px]">
-                    Create new complaint
-                  </Button>
-                  <Button size="lg" variant="default" className="min-w-[200px]">
-                    View all field workers
-                  </Button>
-                </div>
-
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 justify-items-center">
-                  <Card className="w-full">
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleShowComplaints('all')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
@@ -440,7 +434,7 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="w-full">
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleShowComplaints('pending')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
@@ -453,7 +447,7 @@ export default function Dashboard() {
                       </div>
                     </CardContent>
                   </Card>
-                  <Card className="w-full">
+                  <Card className="w-full cursor-pointer hover:shadow-md transition-shadow" onClick={() => handleShowComplaints('completed')}>
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between space-x-4">
                         <div className="flex flex-col space-y-1">
