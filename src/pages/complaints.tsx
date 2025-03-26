@@ -130,7 +130,7 @@ export default function ComplaintsPage() {
     }
 
     try {
-      // 1. Update the complaint
+      // 1. Update the complain
       const { error: complaintError } = await supabase
         .from('complaints')
         .update({ 
