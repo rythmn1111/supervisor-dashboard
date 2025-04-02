@@ -5,7 +5,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Phone, Calendar, ArrowLeft, MapPin, Clock, User } from 'lucide-react';
+import { Phone, Calendar, ArrowLeft, MapPin, Clock, User, Hash, UserCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -34,7 +34,9 @@ const supabase = createClient(
 // Updated Complaint interface
 interface Complaint {
   id: number;
+  complaint_id?: string;  // Add complaint_id to the interface
   user_phone: string;
+  name?: string;          // Add name to the interface
   category: string;
   subcategory?: string;
   address: string;
@@ -273,6 +275,20 @@ export default function ComplaintsPage() {
             </CardHeader>
             <CardContent className="pb-2">
               <div className="space-y-2">
+                {/* Add Complaint ID */}
+                <div className="flex items-center gap-2">
+                  <Hash className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm font-semibold">
+                    ID: {complaint.complaint_id || `#${complaint.id}`}
+                  </span>
+                </div>
+                {/* Add Name */}
+                <div className="flex items-center gap-2">
+                  <UserCircle className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">
+                    Name: {complaint.name || 'Not provided'}
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">
