@@ -24,6 +24,8 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { sendWhatsAppNotification } from '../../utils/whatsappService';
+import { toast } from "sonner"; // Import toast from sonner
 
 // Supabase client initialization
 const supabase = createClient(
@@ -34,9 +36,9 @@ const supabase = createClient(
 // Updated Complaint interface
 interface Complaint {
   id: number;
-  complaint_id?: string;  // Add complaint_id to the interface
+  complaint_id?: string;
   user_phone: string;
-  name?: string;          // Add name to the interface
+  name?: string;
   category: string;
   subcategory?: string;
   address: string;
@@ -67,6 +69,7 @@ export default function ComplaintsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [activeTab, setActiveTab] = useState('not_assigned');
+  const [notificationLoading, setNotificationLoading] = useState<number | null>(null);
 
   // Fetch available field workers based on complaint category
   const fetchAvailableFieldWorkers = async (category: string) => {
@@ -89,6 +92,8 @@ export default function ComplaintsPage() {
   // Handle marking complaint as complete
   const handleMarkAsComplete = async (complaint: Complaint) => {
     try {
+      setNotificationLoading(complaint.id);
+
       // 1. Update the complaint status to completed
       const { error: complaintError } = await supabase
         .from('complaints')
@@ -110,6 +115,26 @@ export default function ComplaintsPage() {
         if (fieldWorkerError) throw fieldWorkerError;
       }
 
+      // 3. Send WhatsApp notification to the user
+      const complaintIdToUse = complaint.complaint_id || `#${complaint.id}`;
+      
+      const notificationSuccess = await sendWhatsAppNotification({
+        phoneNumber: complaint.user_phone,
+        complaintId: complaintIdToUse,
+        category: complaint.category + (complaint.subcategory ? `/${complaint.subcategory}` : ''),
+        status: 'completed'
+      });
+
+      if (notificationSuccess) {
+        toast.success("WhatsApp notification sent", {
+          description: "User has been notified about complaint completion"
+        });
+      } else {
+        toast.error("WhatsApp notification failed", {
+          description: "User was not notified. Please contact them manually."
+        });
+      }
+
       // Refresh complaints
       const { data, error } = await supabase
         .from('complaints')
@@ -122,6 +147,9 @@ export default function ComplaintsPage() {
     } catch (err) {
       console.error('Error marking complaint as complete:', err);
       setError('Could not mark complaint as complete');
+      toast.error("Failed to mark complaint as complete");
+    } finally {
+      setNotificationLoading(null);
     }
   };
 
@@ -132,7 +160,9 @@ export default function ComplaintsPage() {
     }
 
     try {
-      // 1. Update the complain
+      setNotificationLoading(selectedComplaint.id);
+      
+      // 1. Update the complaint
       const { error: complaintError } = await supabase
         .from('complaints')
         .update({ 
@@ -152,6 +182,26 @@ export default function ComplaintsPage() {
 
       if (fieldWorkerError) throw fieldWorkerError;
 
+      // 3. Send WhatsApp notification to the user about status change
+      const complaintIdToUse = selectedComplaint.complaint_id || `#${selectedComplaint.id}`;
+      
+      const notificationSuccess = await sendWhatsAppNotification({
+        phoneNumber: selectedComplaint.user_phone,
+        complaintId: complaintIdToUse,
+        category: selectedComplaint.category + (selectedComplaint.subcategory ? `/${selectedComplaint.subcategory}` : ''),
+        status: 'in_progress'
+      });
+
+      if (notificationSuccess) {
+        toast.success("WhatsApp notification sent", {
+          description: "User has been notified that their complaint is in progress"
+        });
+      } else {
+        toast.error("WhatsApp notification failed", {
+          description: "User was not notified. Please contact them manually."
+        });
+      }
+
       // Refresh complaints
       const { data, error } = await supabase
         .from('complaints')
@@ -169,6 +219,9 @@ export default function ComplaintsPage() {
     } catch (err) {
       console.error('Error assigning complaint:', err);
       setError('Could not assign complaint');
+      toast.error("Failed to assign complaint");
+    } finally {
+      setNotificationLoading(null);
     }
   };
 
@@ -275,14 +328,12 @@ export default function ComplaintsPage() {
             </CardHeader>
             <CardContent className="pb-2">
               <div className="space-y-2">
-                {/* Add Complaint ID */}
                 <div className="flex items-center gap-2">
                   <Hash className="h-4 w-4 text-gray-500" />
                   <span className="text-sm font-semibold">
                     ID: {complaint.complaint_id || `#${complaint.id}`}
                   </span>
                 </div>
-                {/* Add Name */}
                 <div className="flex items-center gap-2">
                   <UserCircle className="h-4 w-4 text-gray-500" />
                   <span className="text-sm">
@@ -397,9 +448,9 @@ export default function ComplaintsPage() {
                       <Button 
                         type="submit" 
                         onClick={handleAssignComplaint}
-                        disabled={!selectedFieldWorker}
+                        disabled={!selectedFieldWorker || !selectedComplaint || notificationLoading === selectedComplaint?.id}
                       >
-                        Assign
+                        {notificationLoading === selectedComplaint?.id ? 'Assigning...' : 'Assign'}
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -410,8 +461,9 @@ export default function ComplaintsPage() {
                   size="sm" 
                   className="w-full"
                   onClick={() => handleMarkAsComplete(complaint)}
+                  disabled={notificationLoading === complaint.id}
                 >
-                  Mark as Complete
+                  {notificationLoading === complaint.id ? 'Processing...' : 'Mark as Complete'}
                 </Button>
               ) : (
                 <Button variant="outline" size="sm" className="w-full">
